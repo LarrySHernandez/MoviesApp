@@ -8,29 +8,179 @@
         .movieFormContainer{
             display: flex;
             justify-content: center;
+            color: black;
+            text-align: center;
         }
-
+        .tableContainer{
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        .organizationChooserContainer{
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        table{
+            border: 1px black solid;
+        }
+        thead{
+            font-size: 45px;
+        }
+        th{
+            border: 1px black solid;
+            padding-left: 40px;
+            padding-right: 40px;
+        }       
+        td{
+            border: 1px black solid;
+            text-align: center;
+        } 
+        button{
+            border: 1px solid black;
+        }
+        
 
     </style>
 </head>
 <body>
     <div class="movieFormContainer">
-        <form action="submit">
+        <form action="">
             <label for="movieName">Movie Name</label>
-            <input id="movieName" type="text" minlength="2">
+            <input class="moviesInput" id="movieName" type="text" minlength="2">
             <label for="movieRating">Movie Rating</label>
-            <input id="movieRating" type="number" min="1" max="10">
+            <input class="moviesInput" id="movieRating" type="number" min="1" max="10">
             <input id="submitBtn" type="submit">
         </form>
     </div>
-    
+    <div class="organizationChooserContainer">
+        <label for="organizationChooser">Organize By:</label>
+        <select id="organizationChooser" name="organizationChooser">
+            <option value="Alphabetical Order">Alphabetical Order</option>
+            <option value="Rating: Lowest to Highest">Rating: Lowest to Highest</option>
+            <option value="Rating: Highest to Lowest">Rating: Highest to Lowest</option>
+        </select>
+    </div>
+    <div class="tableContainer"> 
+        <table>
+            <caption class="movies&ratings">
+                <thead class="movies&ratingsTitle">
+                    <tr>
+                        <th>Movies</th>
+                        <th>Ratings</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </caption>
+        </table>
+    </div>
 
 
     <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
     <script>
-        $('form').on('click', function(){
-            console.log('it worked');
+        $('form').on('submit', function(e){
+            e.preventDefault();
+            if($('#movieName').val() !== '' && $('#movieRating').val() < 11 && $('#movieRating').val() > 0)
+            $('tbody').append($('<tr></tr>').append($(`<td class='movieNames'>${$('#movieName').val()}</td>`), $(`<td class='ratings'>${$('#movieRating').val()}</td>`), $('<button>Delete</button>')));
+            $('.moviesInput').val('');
+            arrayOrganizer();
         })
+        $('tbody').on('click', 'button', function(){
+            $(this).parent().remove();
+        })
+        $('#organizationChooser').on('click', function(){
+            arrayOrganizer();
+        })
+
+        //objectOrganizer is to create an object with where the key is organized alphabetically or the values are organized least to greatest or vice versa.
+        function arrayOrganizer(){
+            let movieArr = [];
+            let ratingsArr = []; 
+            //adding movie names as key and rating as value for movieObj and vice versa with ratingsObj
+            $('.movieNames').map((val) => (movieArr.push({[capitalize($('.movieNames').eq(val).text())] : $('.ratings').eq(val).text()}), ratingsArr.push({[$('.ratings').eq(val).text()]: $('.movieNames').eq(val).text()})));
+
+            //ifs organize either the movieObj or ratingObj based of the value inside select tag. Passes new organized obj as argument to organize.
+            if($('#organizationChooser').val() === 'Alphabetical Order'){
+                let movieNames = movieArr.reduce((acc, currentVal) => {
+                    acc.push(Object.keys(currentVal)[0]);
+                    return acc;
+                }, []);
+                movieNames.sort();
+                movieArr.forEach((val1) => {
+                    movieNames[movieNames.indexOf(Object.keys(val1)[0])] = val1;
+                });
+                organizeMovies(movieNames);
+            }else if($('#organizationChooser').val() === 'Rating: Lowest to Highest'){
+                let ratingsArrFilteredAcending = ratingsArr.reduce((acc, currentVal) => {
+                    acc.push(Object.keys(currentVal)[0]);
+                    return acc;
+                }, []);
+                sortAcending(ratingsArrFilteredAcending);
+                ratingsArr.forEach((val1) => {
+                    ratingsArrFilteredAcending[ratingsArrFilteredAcending.indexOf(Object.keys(val1)[0])] = val1;
+                });
+                organizeRatings(ratingsArrFilteredAcending);
+
+            }else if($('#organizationChooser').val() === 'Rating: Highest to Lowest'){
+                let ratingsArrFilteredDecending = ratingsArr.reduce((acc, currentVal) => {
+                    acc.push(Object.keys(currentVal)[0]);
+                    return acc;
+                }, []);
+                sortDecending(ratingsArrFilteredDecending);
+                ratingsArr.forEach((val1) => {
+                    ratingsArrFilteredDecending[ratingsArrFilteredDecending.indexOf(Object.keys(val1)[0])] = val1;
+                });
+                organizeRatings(ratingsArrFilteredDecending);
+
+            }
+        }
+
+        function capitalize(str){
+            let newStr = ''
+            for(let i = 0; i < str.length; i++){
+                if((str[i - 1] === ' ' || i === 0) && str[i] !== ' '){
+                    newStr = newStr + str[i].toUpperCase();
+                }else{
+                    newStr = newStr + str[i].toLowerCase();
+                }
+                console.log(str[i])
+            }
+            console.log(newStr);
+
+            return newStr;
+
+        }
+    
+        //organize is to delete current hmtl inside tbody and replace with new tr and td organized from the object passed as an arguement
+        function organizeMovies(arr){
+            $('tbody').children().remove();
+            for(let item of arr){
+                $('tbody').append($('<tr></tr>').append(`<td class='movieNames'>${(Object.keys(item)[0])}</td>`,`<td class='ratings'>${(Object.values(item)[0])}</td>`, $('<button>Delete</button>')));
+            }
+        }
+
+        function organizeRatings(arr){
+            $('tbody').children().remove();
+            for(let item of arr){
+                $('tbody').append($('<tr></tr>').append(`<td class='movieNames'>${(Object.values(item)[0])}</td>`,`<td class='ratings'>${(Object.keys(item)[0])}</td>`, $('<button>Delete</button>')));
+            }
+        }
+
+        function sortAcending(arr) {
+            // use custom compare function that sorts numbers ascending
+            arr.sort(function(a, b) {
+                return a - b;
+            });
+        }
+
+        function sortDecending(arr){
+            arr.sort(function(a, b) {
+                return b - a;
+            });
+        }
+
+
     </script>
 </body>
 </html>
